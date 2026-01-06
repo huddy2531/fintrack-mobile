@@ -59,7 +59,7 @@ async function startServer() {
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
   });
-app.get("/api/market-data", async (_req, res) => {
+  app.get("/api/market-data", async (_req, res) => {
     try {
       const assets = [];
       
