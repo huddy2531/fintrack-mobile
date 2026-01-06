@@ -59,7 +59,49 @@ async function startServer() {
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
   });
-
+app.get("/api/market-data", async (_req, res) => {
+    try {
+      const assets = [];
+      
+      // Fetch Forex
+      const forexRes = await fetch("https://v6.exchangerate-api.com/v6/e47e8d1dfc2496cab101a168/latest/USD");
+      const forexData = await forexRes.json();
+      const rates = forexData.conversion_rates;
+      
+      assets.push({
+        id: "EURUSD",
+        symbol: "EUR/USD",
+        name: "Euro to US Dollar",
+        type: "forex",
+        price: 1 / rates.EUR,
+        change24h: 0,
+        change24hPercent: 0.15,
+        lastUpdated: Date.now(),
+        provider: "Exchange Rate API"
+      });
+      
+      // Fetch Crypto
+      const btcRes = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
+      const btcData = await btcRes.json();
+      
+      assets.push({
+        id: "BTCUSDT",
+        symbol: "BTC/USD",
+        name: "Bitcoin",
+        type: "crypto",
+        price: parseFloat(btcData.lastPrice),
+        change24h: parseFloat(btcData.priceChange),
+        change24hPercent: parseFloat(btcData.priceChangePercent),
+        lastUpdated: btcData.closeTime,
+        provider: "Binance"
+      });
+      
+      res.json(assets);
+    } catch (error) {
+      console.error("Market data error:", error);
+      res.status(500).json({ error: "Failed to fetch market data" });
+    }
+  });
   app.use(
     "/api/trpc",
     createExpressMiddleware({
